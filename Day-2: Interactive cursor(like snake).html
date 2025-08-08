@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reptile Cursor With Head Image</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #0d0d0d;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas></canvas>
+
+<script>
+  const canvas = document.querySelector('canvas');
+  const ctx = canvas.getContext('2d');
+
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  const tailLength = 50;
+  const tail = Array.from({ length: tailLength }, () => ({
+    x: width / 2,
+    y: height / 2,
+    angle: 0
+  }));
+
+  const mouse = { x: width / 2, y: height / 2 };
+
+  // Head Image Load
+  const headImage = new Image();
+  headImage.src = "https://i.ibb.co/9bK77cK/lizard-head.png"; // 🦎 Replace this with your own image URL if needed
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  function updateTail() {
+    tail[0].x += (mouse.x - tail[0].x) * 0.2;
+    tail[0].y += (mouse.y - tail[0].y) * 0.2;
+
+    for (let i = 1; i < tail.length; i++) {
+      const dx = tail[i - 1].x - tail[i].x;
+      const dy = tail[i - 1].y - tail[i].y;
+      const angle = Math.atan2(dy, dx);
+      tail[i].angle = angle;
+
+      tail[i].x = tail[i - 1].x - Math.cos(angle) * 15;
+      tail[i].y = tail[i - 1].y - Math.sin(angle) * 15;
+    }
+  }
+
+  function drawTail() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw tail segments
+    for (let i = tail.length - 1; i >= 1; i--) {
+      const seg = tail[i];
+      ctx.save();
+      ctx.translate(seg.x, seg.y);
+      ctx.rotate(seg.angle);
+
+      ctx.beginPath();
+      const hue = (i * 10 + Date.now() / 20) % 360;
+      ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
+      ctx.strokeStyle = 'black';
+
+      ctx.ellipse(0, 0, 10 - i * 0.1, 5 - i * 0.05, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Draw head image
+    const head = tail[0];
+    const headSize = 40;
+
+    ctx.save();
+    ctx.translate(head.x, head.y);
+    ctx.rotate(head.angle);
+    ctx.drawImage(headImage, -headSize / 2, -headSize / 2, headSize, headSize);
+    ctx.restore();
+  }
+
+  function loop() {
+    updateTail();
+    drawTail();
+    requestAnimationFrame(loop);
+  }
+
+  headImage.onload = () => {
+    loop();
+  };
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+</script>
+</body>
+</html>
